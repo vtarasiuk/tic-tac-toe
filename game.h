@@ -7,23 +7,19 @@
 
 #define GAME_LINE_SIZE 3
 
-typedef struct
-{
-  int fieldState[GAME_LINE_SIZE][GAME_LINE_SIZE]; // id exchange in the future/// server implementation. different checks // crossplatform // WebSocket
-  
-} GameData, *GameDataPtr;
+#define PLAYER_1_VALUE 1
+#define PLAYER_2_VALUE 2
+
+#define CHECK_FUNCTIONS 3
 
 typedef struct
 {
-  int straight[2 * GAME_LINE_SIZE][GAME_LINE_SIZE];
-  int diagonal[2][3]; // refactor
-} FieldLines, *FieldLinesPtr;
+  short fieldState[GAME_LINE_SIZE][GAME_LINE_SIZE]; // id exchange in the future/// server implementation. // crossplatform // WebSocket
+} GameData, *pGameData;
 
-bool field_full(GameDataPtr data);
-int won(GameDataPtr data);
-bool line_filled(int line[GAME_LINE_SIZE]);
-FieldLines possible_field_lines(GameDataPtr data);
-bool valid_turn(GameDataPtr data, uint8_t playerChose);
-void move(GameDataPtr data, uint8_t playerID, uint8_t playerChose);
+bool GameFieldFull(pGameData data); // no static !!!!!!!!!!!!!
+short GameWinner(pGameData data);
+bool ValidTurn(pGameData data, uint8_t move);
+void Move(pGameData data, uint8_t playerID, uint8_t move);
 
 #endif

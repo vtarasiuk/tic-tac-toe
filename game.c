@@ -1,9 +1,17 @@
 #include "game.h"
 
-bool valid_turn(GameDataPtr data, uint8_t playerChose)
+typedef short (*GameFieldCheckFunction) (pGameData);
+
+static bool EqualFieldValues(short *values);
+static short CheckHorizontalValues(pGameData data);
+static short CheckVerticalValues(pGameData data);
+static short CheckDiagonalValues(pGameData data);
+
+
+bool ValidTurn(pGameData data, uint8_t move)
 {
-  uint8_t rowChosed = (playerChose - 1) / GAME_LINE_SIZE;
-  uint8_t colChosed = (playerChose - 1) % GAME_LINE_SIZE;
+  uint8_t rowChosed = (move - 1) / GAME_LINE_SIZE;
+  uint8_t colChosed = (move - 1) % GAME_LINE_SIZE;
 
   if (data->fieldState[rowChosed][colChosed] == 0)
   {
@@ -12,46 +20,39 @@ bool valid_turn(GameDataPtr data, uint8_t playerChose)
   return false;
 }
 
-void move(GameDataPtr data, uint8_t playerID, uint8_t playerChose)
+void Move(pGameData data, uint8_t playerID, uint8_t move)
 {
-  uint8_t rowChosed = (playerChose - 1) / GAME_LINE_SIZE;
-  uint8_t colChosed = (playerChose - 1) % GAME_LINE_SIZE;
+  uint8_t rowChosed = (move - 1) / GAME_LINE_SIZE;
+  uint8_t colChosed = (move - 1) % GAME_LINE_SIZE;
   data->fieldState[rowChosed][colChosed] = playerID;
 }
 
-int won(GameDataPtr data)
+short GameWinner(pGameData data)
 {
-  FieldLines lines;
-  lines = possible_field_lines(data); // structure
-
-  for (uint8_t i = 0; i < 2 * GAME_LINE_SIZE; i++) // size4of ??? independent
+  // Check functions
+  GameFieldCheckFunction check_functions[CHECK_FUNCTIONS] = { CheckHorizontalValues, CheckVerticalValues, CheckDiagonalValues };
+  short winner;
+  
+  // Get a winner or 0
+  for (uint8_t i = 0; i < CHECK_FUNCTIONS; i++)
   {
-    if (line_filled(lines.straight[i])) // || refactor
+    winner = check_functions[i](data);
+    if (winner != 0)
     {
-      return lines.straight[i][0];
-    }
-    else if (i < 2 && line_filled(lines.diagonal[i]))
-    {
-      return lines.diagonal[i][0]; /// change for personIDDD
+      return winner;
     }
   }
+  
   return 0;
 }
 
-bool line_filled(int line[GAME_LINE_SIZE])
+static bool EqualFieldValues(short *values)
 {
-  int turnID = 0;
-  for (uint8_t i = 0; i < GAME_LINE_SIZE; i++)
+  // Equality check for all values
+  short first_value = values[0];
+  for (uint8_t i = 1; i < GAME_LINE_SIZE; i++)
   {
-    if (i == 0)
-    {
-      turnID = line[i];      
-    }
-    else if (turnID != line[i])
-    {
-      return false;
-    }
-    if (turnID == 0)
+    if (first_value != values[i])
     {
       return false;
     }
@@ -59,38 +60,84 @@ bool line_filled(int line[GAME_LINE_SIZE])
   return true;
 }
 
-FieldLines possible_field_lines(GameDataPtr data)
+static short CheckHorizontalValues(pGameData data)
 {
-  FieldLines lines = {0};
-
-  for (uint8_t i = 0; i < GAME_LINE_SIZE; i++) // GAME_FIELD_SIZE
+  short line[GAME_LINE_SIZE] = {0};
+  for (uint8_t i = 0; i < GAME_LINE_SIZE; i++)
   {
     for (uint8_t j = 0; j < GAME_LINE_SIZE; j++)
     {
-      lines.straight[i][j] = data->fieldState[i][j]; // gorizontal lines copying
+      // Copy line
+      line[j] = data->fieldState[i][j];
+    }
+
+    // Values are equal
+    if (EqualFieldValues(line))
+    {
+      return line[0];      // Winner
     }
   }
   
-  for (uint8_t i = GAME_LINE_SIZE; i < 2 * GAME_LINE_SIZE; i++)
+  // Values are NOT equal
+  return 0;
+}
+
+static short CheckVerticalValues(pGameData data)
+{
+  short line[GAME_LINE_SIZE] = {0};
+  for (uint8_t i = 0; i < GAME_LINE_SIZE; i++)
   {
     for (uint8_t j = 0; j < GAME_LINE_SIZE; j++)
     {
-      lines.straight[i][j] = data->fieldState[j][i-GAME_LINE_SIZE]; // vertical lines copying
+      // Copy line
+      line[j] = data->fieldState[j][i];
+    }
+
+    // Values are equal
+    if (EqualFieldValues(line))
+    {
+      return line[0];     // Winner
     }
   }
-
-  // fix in the future
-  lines.diagonal[0][0] = data->fieldState[0][0];
-  lines.diagonal[0][1] = data->fieldState[1][1];
-  lines.diagonal[0][2] = data->fieldState[2][2];
-  lines.diagonal[1][0] = data->fieldState[2][0];
-  lines.diagonal[1][1] = data->fieldState[1][1];
-  lines.diagonal[1][2] = data->fieldState[0][2];
-
-  return lines;
+  
+  // Values are NOT equal
+  return 0;
 }
 
-bool field_full(GameDataPtr data)
+static short CheckDiagonalValues(pGameData data)
+{
+  short line[GAME_LINE_SIZE] = {0};
+  // Main diagonal
+  for (uint8_t i = 0; i < GAME_LINE_SIZE; i++)
+  {
+    line[i] = data->fieldState[i][i];
+  }
+
+  // Values are equal
+  if (EqualFieldValues(line))
+  {
+    return line[0];     // Winner
+  }
+
+  // Side diagonal
+  const short expected_sum = GAME_LINE_SIZE - 1;
+  for (uint8_t row = 0; row < GAME_LINE_SIZE; row++)
+  {
+    uint8_t col = expected_sum - row;
+    line[row] = data->fieldState[row][col];
+  }
+  
+  // Values are equal
+  if (EqualFieldValues(line))
+  {
+    return line[0];     // Winner
+  }
+
+  // Values are NOT equal
+  return 0;
+}
+
+bool GameFieldFull(pGameData data)
 {
   for (uint8_t i = 0; i < GAME_LINE_SIZE; i++)
   {

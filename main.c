@@ -17,12 +17,13 @@ int main()
   printf(ANSI_COLOR_MAGENTA "This is tic-tac-toe by vtarasiuk. Welcome, Honey\n\n" ANSI_COLOR_RESET);
 
   GameData data = {0};
-  int8_t playerTurn = 1;
-  uint8_t winner;
+  uint8_t playerTurn = 1;
+  uint8_t winner = 0;
 
-  print_game_field(&data);
-  do
+  while ( !(winner = GameWinner(&data)) && !GameFieldFull(&data) )
   {
+    PrintGameField(&data);
+
     if (playerTurn == 1)
     {
       printf(ANSI_COLOR_BLUE "\nPlayer %d move:\n" ANSI_COLOR_RESET, playerTurn); 
@@ -34,24 +35,24 @@ int main()
       printf(ANSI_COLOR_RED "Enter your turn [1-9]: " ANSI_COLOR_RESET);
     }
 
-    int playerChose = 0;
-    scanf("%d", &playerChose);
+    int player_move = 0;
+    scanf("%d", &player_move);
     printf("\n");
 
-    // 2\ and program die
+    // 2\ and program die (Not a Number) possible solution: int[] and cast to char at the end
 
-    if (playerChose < 1 || playerChose > 9) 
+    if (player_move < 1 || player_move > 9) 
     {
-      fprintf(stderr, "Hella wrong choose\n");
+      fprintf(stderr, "Hella wrong choose\n\n");
       continue;
     }
-    else if (!valid_turn(&data, playerChose))
+    else if (!ValidTurn(&data, player_move)) // add check for the valid range
     {
-      fprintf(stderr, "Already filled, oops\n");
+      fprintf(stderr, "Already filled, oops\n\n");
       continue;
     }
 
-    move(&data, playerTurn, playerChose);
+    Move(&data, playerTurn, player_move);
 
     if (playerTurn == 1)
     {
@@ -61,10 +62,9 @@ int main()
     {
       playerTurn = 1;
     }
-
-    print_game_field(&data);
   }
-  while (!(winner = won(&data)) && !field_full(&data));
+
+  PrintGameField(&data);
 
   if (winner)
   {
