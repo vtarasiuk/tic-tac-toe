@@ -7,23 +7,32 @@ CFLAGS = -Wall -Werror -Wpedantic
 # Source files
 SRCS = main.c output.c game.c
 
+# Object files directory
+BUILD_DIR = ./build
+
 # Object files
-OBJS = $(SRCS:.c=.o)
+OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
+
+# Executable directory
+BIN_DIR = ./bin
 
 # Executable
-TARGET = main
+TARGET = $(BIN_DIR)/main
 
 # Default target
 all: $(TARGET)
 
-# Linking step
+# Create build and bin directories if they don't exist
+$(shell mkdir -p $(BUILD_DIR) $(BIN_DIR))
+
+# Linking
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
-# Compilation step
-%.o: %.c
+# Compilation
+$(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)

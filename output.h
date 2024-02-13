@@ -1,7 +1,7 @@
 #ifndef OUTPUT_H
 #define OUTPUT_H
 
-#include "game.h"
+#include "game_structure.h"
 
 void PrintGameField(pGameData data);
 

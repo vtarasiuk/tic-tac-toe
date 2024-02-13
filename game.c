@@ -1,4 +1,7 @@
 #include "game.h"
+#include <stdio.h>
+
+#define CHECK_FUNCTIONS 3
 
 typedef short (*GameFieldCheckFunction) (pGameData);
 
@@ -8,7 +11,7 @@ static short CheckVerticalValues(pGameData data);
 static short CheckDiagonalValues(pGameData data);
 
 
-bool ValidTurn(pGameData data, uint8_t move)
+bool GameValidTurn(pGameData data, uint8_t move)
 {
   uint8_t rowChosed = (move - 1) / GAME_LINE_SIZE;
   uint8_t colChosed = (move - 1) % GAME_LINE_SIZE;
@@ -20,11 +23,11 @@ bool ValidTurn(pGameData data, uint8_t move)
   return false;
 }
 
-void Move(pGameData data, uint8_t playerID, uint8_t move)
+void GameMove(pGameData data, uint8_t player_id, uint8_t move)
 {
   uint8_t rowChosed = (move - 1) / GAME_LINE_SIZE;
   uint8_t colChosed = (move - 1) % GAME_LINE_SIZE;
-  data->fieldState[rowChosed][colChosed] = playerID;
+  data->fieldState[rowChosed][colChosed] = player_id;
 }
 
 short GameWinner(pGameData data)

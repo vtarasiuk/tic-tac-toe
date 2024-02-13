@@ -17,21 +17,22 @@ int main()
   printf(ANSI_COLOR_MAGENTA "This is tic-tac-toe by vtarasiuk. Welcome, Honey\n\n" ANSI_COLOR_RESET);
 
   GameData data = {0};
-  uint8_t playerTurn = 1;
+  bool player_turn = 0; // need to randomize
   uint8_t winner = 0;
+  // turns_count
 
   while ( !(winner = GameWinner(&data)) && !GameFieldFull(&data) )
   {
     PrintGameField(&data);
 
-    if (playerTurn == 1)
+    if (player_turn)
     {
-      printf(ANSI_COLOR_BLUE "\nPlayer %d move:\n" ANSI_COLOR_RESET, playerTurn); 
+      printf(ANSI_COLOR_BLUE "\nPlayer %d move:\n" ANSI_COLOR_RESET, player_turn + 1); 
       printf(ANSI_COLOR_BLUE "Enter your turn [1-9]: " ANSI_COLOR_RESET);
     }
     else
     {
-      printf(ANSI_COLOR_RED "\nPlayer %d move:\n" ANSI_COLOR_RESET, playerTurn); 
+      printf(ANSI_COLOR_RED "\nPlayer %d move:\n" ANSI_COLOR_RESET, player_turn + 1); 
       printf(ANSI_COLOR_RED "Enter your turn [1-9]: " ANSI_COLOR_RESET);
     }
 
@@ -39,29 +40,26 @@ int main()
     scanf("%d", &player_move);
     printf("\n");
 
-    // 2\ and program die (Not a Number) possible solution: int[] and cast to char at the end
+    // Clear stdin
+    int discard;
+    while ((discard = getchar()) != '\n' && discard != EOF);
+
+    // check NaN values
 
     if (player_move < 1 || player_move > 9) 
     {
       fprintf(stderr, "Hella wrong choose\n\n");
       continue;
     }
-    else if (!ValidTurn(&data, player_move)) // add check for the valid range
+    else if (!GameValidTurn(&data, player_move)) // add check for the valid range
     {
       fprintf(stderr, "Already filled, oops\n\n");
       continue;
     }
 
-    Move(&data, playerTurn, player_move);
+    GameMove(&data, player_turn + 1, player_move); // make player_id
 
-    if (playerTurn == 1)
-    {
-      playerTurn = 2;
-    }
-    else
-    {
-      playerTurn = 1;
-    }
+    player_turn = !player_turn;
   }
 
   PrintGameField(&data);

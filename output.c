@@ -3,6 +3,8 @@
 #include <stdint.h>
 
 #define OUTPUT_DEVICE stdout
+#define PLAYER_1_VALUE 1
+#define PLAYER_2_VALUE 2
 
 void PrintGameField(pGameData data)
 {
