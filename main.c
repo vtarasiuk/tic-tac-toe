@@ -1,28 +1,46 @@
+#include "output.h"
+#include "game.h"
+#include "common.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "output.h"
-#include "game.h"
+#include <stdarg.h>
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ERRBUF_SIZE 512
+_Thread_local char last_error[ERRBUF_SIZE];
+
+void set_last_err(const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(last_error, ERRBUF_SIZE, fmt, ap);
+  va_end(ap);
+}
+
+void clear_last_err()
+{
+  last_error[0] = '\0';
+}
+
+const char *last_err(void) {
+  return (last_error[0] != '\0') ? last_error : "";
+}
 
 int main()
 {
-  printf(ANSI_COLOR_MAGENTA "This is tic-tac-toe by vtarasiuk. Welcome, Honey\n\n" ANSI_COLOR_RESET);
+  enable_virtual_terminal_processing();
 
   GameData data = {0};
   int8_t playerTurn = 1;
   uint8_t winner;
 
-  print_game_field(&data);
   do
   {
+    printf("\x1B[1;1H\x1B[2J"); // clear screen
+    printf(ANSI_COLOR_MAGENTA "This is tic-tac-toe by vtarasiuk. Welcome, Honey\n\n" ANSI_COLOR_RESET);
+    print_game_field(&data);
+
+    printf(ANSI_COLOR_YELLOW "Last error: [%s]" ANSI_COLOR_RESET, last_err());
+
     if (playerTurn == 1)
     {
       printf(ANSI_COLOR_BLUE "\nPlayer %d move:\n" ANSI_COLOR_RESET, playerTurn); 
@@ -35,22 +53,25 @@ int main()
     }
 
     int playerChose = 0;
-    scanf("%d", &playerChose);
-    printf("\n");
-
-    // 2\ and program die
+    if (scanf("%d", &playerChose) == 0) // after scanf add the cleaning of the stdin cause it does not make sense
+    {
+      int c;
+      while ((c = getchar()) != '\n' && c != EOF);
+    }
+    printf("\x1B[1;1H\x1B[2J"); // clear screen
 
     if (playerChose < 1 || playerChose > 9) 
     {
-      fprintf(stderr, "Hella wrong choose\n");
+      set_last_err("%s", "Entered number should be in range from 1 to 9");
       continue;
     }
     else if (!valid_turn(&data, playerChose))
     {
-      fprintf(stderr, "Already filled, oops\n");
+      set_last_err("%s", "That cell has already been played");
       continue;
     }
 
+    clear_last_err();
     move(&data, playerTurn, playerChose);
 
     if (playerTurn == 1)
@@ -61,11 +82,10 @@ int main()
     {
       playerTurn = 1;
     }
-
-    print_game_field(&data);
   }
   while (!(winner = won(&data)) && !field_full(&data));
 
+  print_game_field(&data);
   if (winner)
   {
     printf(ANSI_COLOR_MAGENTA "Player %d won!\n" ANSI_COLOR_RESET, winner);
@@ -74,6 +94,10 @@ int main()
   {
     printf(ANSI_COLOR_MAGENTA "GG, Tie!\n" ANSI_COLOR_RESET);
   }
+
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF);
+  getchar();
 
   return 0;
 }
