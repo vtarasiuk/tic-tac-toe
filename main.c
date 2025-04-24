@@ -12,7 +12,7 @@ int main()
     {
         fprintf(stderr, "Error: could not enable virtual terminal processing\n");
         getchar();
-        return EXIT_FAILURE;
+        return 1;
     }
 
     GameData data = {0};
