@@ -5,7 +5,7 @@
 #include <stdarg.h>
 
 #define ERRBUF_SIZE 512
-char last_error[ERRBUF_SIZE];
+extern char last_error[ERRBUF_SIZE];
 
 void setLastErr(const char *fmt, ...);
 
