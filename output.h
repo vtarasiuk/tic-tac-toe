@@ -13,6 +13,11 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-void print_game_field(GameDataPtr data);
+void printGameField(pGameData data);
+static inline void discardInputStream()
+{
+    int discard;
+    while ((discard = getchar()) != '\n' && discard != EOF);
+}
 
 #endif

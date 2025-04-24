@@ -6,24 +6,18 @@
 #include <stdio.h>
 
 #define GAME_LINE_SIZE 3
+#define CHECK_FUNCTIONS 3
 
 typedef struct
 {
-  int fieldState[GAME_LINE_SIZE][GAME_LINE_SIZE]; // id exchange in the future/// server implementation. different checks // crossplatform // WebSocket
-  
-} GameData, *GameDataPtr;
+    short grid[GAME_LINE_SIZE][GAME_LINE_SIZE];
+} GameData, *pGameData;
 
-typedef struct
-{
-  int straight[2 * GAME_LINE_SIZE][GAME_LINE_SIZE];
-  int diagonal[2][3]; // refactor
-} FieldLines, *FieldLinesPtr;
+typedef short (*GameFieldCheckFunction) (pGameData);
 
-bool field_full(GameDataPtr data);
-int won(GameDataPtr data);
-bool line_filled(int line[GAME_LINE_SIZE]);
-FieldLines possible_field_lines(GameDataPtr data);
-bool valid_turn(GameDataPtr data, uint8_t playerChose);
-void move(GameDataPtr data, uint8_t playerID, uint8_t playerChose);
+bool gridFull(pGameData data);
+short won(pGameData data);
+bool validTurn(pGameData data, uint8_t playerChose);
+void makeTurn(pGameData data, uint8_t playerID, uint8_t playerChose);
 
 #endif

@@ -2,18 +2,22 @@
 #define COMMON_H
 
 #ifdef _WIN32
-  #include <windows.h>
+#include <windows.h>
+#endif
 
-  extern inline void enable_virtual_terminal_processing(void) {
+static inline int enableVirtualTerminalProcessing(void)
+{
+#ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE) return;
+    if (hOut == INVALID_HANDLE_VALUE) return EOF;
     DWORD dwMode = 0;
-    if (!GetConsoleMode(hOut, &dwMode)) return;
-    dwMode |= 0X0004;
+    if (!GetConsoleMode(hOut, &dwMode)) return EOF;
+    dwMode |= 0x0004;
     SetConsoleMode(hOut, dwMode);
-  }
+    return 0;
 #else
-  extern inline void enable_virtual_terminal_processing(void) { }
-#endif
+    return 0;
+#endif // _WIN32
+}
 
-#endif
+#endif // COMMON_H
